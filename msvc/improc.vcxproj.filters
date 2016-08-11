@@ -12,6 +12,8 @@
     <ClInclude Include="..\src\image_io.h">
       <Filter>IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\fern.h" />
+    <ClInclude Include="..\src\mnist.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Main.cpp" />

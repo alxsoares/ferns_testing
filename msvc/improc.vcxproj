@@ -39,7 +39,7 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros">
-    <NuGetPackageImportStamp>2b5aebec</NuGetPackageImportStamp>
+    <NuGetPackageImportStamp>03d454c1</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -80,9 +80,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\fern.h" />
     <ClInclude Include="..\src\image.h" />
     <ClInclude Include="..\src\image_filter.h" />
     <ClInclude Include="..\src\image_io.h" />
+    <ClInclude Include="..\src\mnist.h" />
     <ClInclude Include="..\src\stb_image.h" />
     <ClInclude Include="..\src\stb_image_write.h" />
   </ItemGroup>
@@ -98,6 +100,7 @@
   <ImportGroup Label="ExtensionTargets">
     <Import Project="packages\glfw.redist.3.0.4.3\build\native\glfw.redist.targets" Condition="Exists('packages\glfw.redist.3.0.4.3\build\native\glfw.redist.targets')" />
     <Import Project="packages\glfw.3.0.4.3\build\native\glfw.targets" Condition="Exists('packages\glfw.3.0.4.3\build\native\glfw.targets')" />
+    <Import Project="packages\cereal.1.0.0\build\native\cereal.targets" Condition="Exists('packages\cereal.1.0.0\build\native\cereal.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -105,5 +108,6 @@
     </PropertyGroup>
     <Error Condition="!Exists('packages\glfw.redist.3.0.4.3\build\native\glfw.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\glfw.redist.3.0.4.3\build\native\glfw.redist.targets'))" />
     <Error Condition="!Exists('packages\glfw.3.0.4.3\build\native\glfw.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\glfw.3.0.4.3\build\native\glfw.targets'))" />
+    <Error Condition="!Exists('packages\cereal.1.0.0\build\native\cereal.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\cereal.1.0.0\build\native\cereal.targets'))" />
   </Target>
 </Project>
