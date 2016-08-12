@@ -1,6 +1,7 @@
 #include "image_io.h"
 #include "image_filter.h"
 #include "fern.h"
+#include "logistic.h"
 #include "mnist.h"
 #include <iostream>
 int main(int argc, char * argv[])
@@ -12,12 +13,14 @@ int main(int argc, char * argv[])
 	//auto test_img = readMNISTImg("t10k-images.idx3-ubyte");
 	//auto test_lbl = readMNISTLabel("t10k-labels.idx1-ubyte");
 	//Fern Features, Number of Ferns, Class Number
-    ferns::FernClassifier fc(10, 40, 10, train_img[0].width, train_img[0].height);
+    ferns::FernClassifier fc(4, 20, 10, train_img[0].width, train_img[0].height);
+    logistic::LogisticRegression lc(10, 28 * 28, train_img[0].width, train_img[0].height);
+
     printf("%d %d\n",train_img[0].width,train_img[0].height);
     fc.sampleFeatureFerns();
 
     ferns::FernClassifier bestFC = fc;
-	float bestAcc = 1.0;
+    float bestAcc = 1.0;
 	float pAcc = 0;
 	int iter = 0;
 	int iterations = 15000;
@@ -29,6 +32,12 @@ int main(int argc, char * argv[])
     std::random_device rd;
     std::mt19937 gen(rd());
 
+    float learning_rate = 1.0f;
+    float l2_reg = 0.01f;
+    int batch_size = 128;
+
+    lc.computeMeans(train_img);
+
 	while (true) {
 		fc = bestFC;
 
@@ -38,8 +47,9 @@ int main(int argc, char * argv[])
 		for (size_t i = 0; i < train_img.size(); i++) {
 			fc.train(train_img[i], train_lbl[i]);
 		}
-		fc.sampleBadFeatures();
+        fc.sampleBadFeatures();
 
+        lc.train(train_img, train_lbl, batch_size, learning_rate, l2_reg);
 
 		for (size_t i = 0; i < train_img.size(); i++) {
 			fc.train(train_img[i], train_lbl[i]);
@@ -87,7 +97,16 @@ int main(int argc, char * argv[])
 			pAcc = meanAccuracy;
 			//std::cout << "accepted" << std::endl;
 		}
-		std::cout << meanAccuracy <<"\t" << cost << "\t" << sample << "\t" << iter << "\t" << temp << std::endl;
+        float correct_lc = 0;
+        for (size_t i = 0; i < test_img.size(); i++) {
+            auto probs = lc.predict(test_img[i]);
+            auto res = std::max_element(probs.begin(), probs.end()) - probs.begin();
+            if (test_lbl[i] == res)
+                correct_lc++;
+        }
+        float meanAccuracy2 = correct_lc / test_img.size();
+
+        std::cout << meanAccuracy << "\t" << meanAccuracy2 << "\t" << cost << "\t" << sample << "\t" << iter << "\t" << temp << std::endl;
 
 		iter++;
 		if (iter >= iterations) {
