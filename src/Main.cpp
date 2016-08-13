@@ -32,9 +32,11 @@ int main(int argc, char * argv[])
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    float learning_rate = 1.0f;
-    float l2_reg = 0.01f;
-    int batch_size = 128;
+    float learning_rate = 0.1f;
+    float l1_reg = 0.001f;
+    float l2_reg = 0.001f;
+
+    int batch_size = 64;
 
     lc.computeMeans(train_img);
 
@@ -48,8 +50,8 @@ int main(int argc, char * argv[])
 			fc.train(train_img[i], train_lbl[i]);
 		}
         fc.sampleBadFeatures();
-
-        lc.train(train_img, train_lbl, batch_size, learning_rate, l2_reg);
+        for (size_t i = 0; i < train_img.size()/4; i += batch_size)
+            lc.train(train_img, train_lbl, batch_size, learning_rate, l1_reg, l2_reg);
 
 		for (size_t i = 0; i < train_img.size(); i++) {
 			fc.train(train_img[i], train_lbl[i]);

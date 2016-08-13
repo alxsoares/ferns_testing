@@ -66,11 +66,19 @@ namespace logistic {
             }
             return scores;
         }
+        template <typename T> int sgn(T val) {
+            return (T(0) < val) - (val < T(0));
+        }
         template<typename T>
-        void train(std::vector<img::Image<T, C>> & imgs, std::vector<uint8_t> labels, int batch_num, float learning_rate, float l2_reg) {
+        void train(std::vector<img::Image<T, C>> & imgs, std::vector<uint8_t> labels, int batch_num, float learning_rate, float l1_reg, float l2_reg) {
             std::uniform_int_distribution<int> dist(0, imgs.size() - 1);
             auto loss = 0.0f;
             std::vector<float> grad(numClasses*numFeatures,0);
+            img::Image<float, 10> weightImg(w, h, weights.data());
+            img::Image<float, 10> gradImg(w, h, grad.data());
+            img::Image<float, 1> scalemg(w, h, scales.data());
+            img::Image<float, 1> biasImg(w, h, biases.data());
+
             for (int i = 0; i < batch_num; i++) {
                 auto idx = dist(gen);
                 auto lbl = labels[idx];
@@ -91,12 +99,15 @@ namespace logistic {
             for (auto & w : grad)
                 w /= batch_num;
 
+            float w1 = 0;
             float w2 = 0;
-            for (auto & w : weights)
+            for (auto & w : weights) {
+                w1 += std::abs(w);
                 w2 += w*w;
-            loss += 0.5f * l2_reg * w2;
+            }
+            loss += l1_reg*w1 + 0.5f * l2_reg * w2;
             for (size_t i = 0; i < grad.size(); i++)
-                grad[i] += l2_reg * weights[i];
+                grad[i] += l1_reg * sgn(weights[i]) + l2_reg * weights[i];
 
             // now apply
             for (size_t i = 0; i < weights.size(); i++)
