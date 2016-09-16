@@ -18,10 +18,13 @@ namespace logistic {
     }
 
     const int C = 1;
+
     class LogisticRegression {
+        bool useHinge;
+        float delta = 1.0f;
     public:
-        LogisticRegression(int numClasses, int numFeatures, int w, int h)
-            : numClasses(numClasses), numFeatures(numFeatures), gen(std::random_device()()), w(w), h(h), local_img(w,h)
+        LogisticRegression(int numClasses, int numFeatures, int w, int h, bool useHinge = false)
+            : numClasses(numClasses), numFeatures(numFeatures), gen(std::random_device()()), w(w), h(h), local_img(w, h), useHinge(useHinge)
         {
             weights = std::vector<float>(numClasses*numFeatures);
             auto dist = std::normal_distribution<float>(0, 1);
@@ -85,13 +88,30 @@ namespace logistic {
                 auto img = imgs[idx];
 
                 auto scores = predict(img);
-                loss += -std::log(scores[lbl]);
 
-
-                // local image got updated in the predict call!!
-                for (int j = 0; j < w*h; j++) {
+                if (useHinge) {
+                    auto correct_score = scores[lbl];
                     for (int c = 0; c < numClasses; c++) {
-                        grad[c*numFeatures + j] += (scores[c] - (lbl ==c)) * local_img.ptr[j];
+                        if (c == lbl)
+                            continue;
+                        auto margin = scores[c] - correct_score + delta;
+                        if (margin > 0) {
+                            loss += margin;
+                            for (int j = 0; j < w*h; j++) {
+                                grad[c*numFeatures + j] += local_img.ptr[j];
+                                grad[lbl*numFeatures + j] -= local_img.ptr[j];
+
+                            }
+                        }
+                    }
+                } else {
+                    loss += -std::log(scores[lbl]);
+
+                    // local image got updated in the predict call!!
+                    for (int j = 0; j < w*h; j++) {
+                        for (int c = 0; c < numClasses; c++) {
+                            grad[c*numFeatures + j] += (scores[c] - (lbl == c)) * local_img.ptr[j];
+                        }
                     }
                 }
             }
@@ -119,6 +139,9 @@ namespace logistic {
                 local_img.ptr[j] = (img.ptr[j] - biases[j]) / scales[j];
             }
             auto scores = run(local_img);
+            if (useHinge)
+                return scores;
+
             auto maxE = *std::max_element(scores.begin(), scores.end());
             auto sumE = 0.0f;
             for (auto & s : scores) {
